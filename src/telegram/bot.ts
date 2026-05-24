@@ -2,15 +2,17 @@ import TelegramBot from 'node-telegram-bot-api';
 import { env } from '../config/env';
 import { prisma } from '../prisma/client';
 
-export const bot = new TelegramBot(env.telegramBotToken, { polling: true });
+export const bot = env.telegramBotToken ? new TelegramBot(env.telegramBotToken, { polling: true }) : null;
 
 export async function notify(text: string) {
+  if (!bot) return;
   const recipients = await prisma.telegramRecipient.findMany({ where: { isActive: true } });
   const targets = recipients.length ? recipients.map((r) => r.chatId) : env.telegramChatId ? [env.telegramChatId] : [];
   await Promise.allSettled(targets.map((chatId) => bot.sendMessage(chatId, text)));
 }
 
 export function registerCommands(state: { paused: boolean }) {
+  if (!bot) return;
   bot.onText(/\/start/, () => notify('Бот запущен (paper trading).'));
   bot.onText(/\/status/, async () => notify(`Статус: ${state.paused ? 'PAUSED' : 'RUNNING'}`));
   bot.onText(/\/balance/, async () => {

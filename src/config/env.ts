@@ -6,21 +6,9 @@ function getDatabaseUrl(): string | undefined {
   return process.env.DATABASE_URL || process.env.POSTGRES_URL || process.env.DATABASE_PRIVATE_URL;
 }
 
-const resolvedDatabaseUrl = getDatabaseUrl();
-const required: Array<[string, string | undefined, string]> = [
-  ['DATABASE_URL', resolvedDatabaseUrl, 'Set DATABASE_URL (or POSTGRES_URL/DATABASE_PRIVATE_URL) to your PostgreSQL connection string.'],
-  ['TELEGRAM_BOT_TOKEN', process.env.TELEGRAM_BOT_TOKEN, 'Set TELEGRAM_BOT_TOKEN from @BotFather.']
-];
-
-const missing = required.filter(([, value]) => !value);
-if (missing.length) {
-  const details = missing.map(([key, , hint]) => `- ${key}: ${hint}`).join('\n');
-  throw new Error(`Missing required environment variables:\n${details}\n\nCopy .env.example to .env and fill all required values.`);
-}
-
 export const env = {
-  databaseUrl: resolvedDatabaseUrl!,
-  telegramBotToken: process.env.TELEGRAM_BOT_TOKEN!,
+  databaseUrl: getDatabaseUrl(),
+  telegramBotToken: process.env.TELEGRAM_BOT_TOKEN,
   telegramChatId: process.env.TELEGRAM_CHAT_ID,
   panelPort: Number(process.env.PANEL_PORT ?? 3000),
   paperTrading: process.env.PAPER_TRADING !== 'false',
@@ -30,6 +18,16 @@ export const env = {
   scanIntervalMs: Number(process.env.SCAN_INTERVAL_MS ?? 60000)
 };
 
-if (!env.paperTrading && !env.allowLiveTrading) {
-  throw new Error('Live trading is blocked. Set ALLOW_LIVE_TRADING=true explicitly.');
+export function getEnvValidationErrors(): string[] {
+  const errors: string[] = [];
+  if (!env.databaseUrl) {
+    errors.push('DATABASE_URL is required (or POSTGRES_URL / DATABASE_PRIVATE_URL).');
+  }
+  if (!env.telegramBotToken) {
+    errors.push('TELEGRAM_BOT_TOKEN is not set: Telegram notifications and commands will be disabled.');
+  }
+  if (!env.paperTrading && !env.allowLiveTrading) {
+    errors.push('Live trading is blocked. Set ALLOW_LIVE_TRADING=true explicitly when PAPER_TRADING=false.');
+  }
+  return errors;
 }
