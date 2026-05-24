@@ -19,9 +19,10 @@ for (const warning of errors.filter((e) => !fatal.includes(e))) {
 const hasDatabase = Boolean(env.databaseUrl);
 const state = { paused: false };
 
+startWebPanel(env.panelPort);
+
 if (hasDatabase) {
   registerCommands(state);
-  startWebPanel(env.panelPort);
 
   async function tick() {
     try {

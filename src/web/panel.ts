@@ -1,12 +1,31 @@
 import express from 'express';
 import { prisma } from '../prisma/client';
 import { logger } from '../config/logger';
+import { env } from '../config/env';
 
 export function startWebPanel(port = 3000) {
   const app = express();
   app.use(express.urlencoded({ extended: true }));
 
+  const hasDatabase = Boolean(env.databaseUrl);
+
+  app.get('/healthz', (_req, res) => {
+    res.status(200).json({ ok: true, hasDatabase, telegramEnabled: Boolean(env.telegramBotToken) });
+  });
+
   app.get('/', async (_req, res) => {
+    if (!hasDatabase) {
+      return res.status(200).send(`<!doctype html><html><head><meta charset="utf-8"/><title>Trading Bot Panel</title></head><body>
+<h1>Crypto Bot Panel</h1>
+<p>Service is running in limited mode.</p>
+<ul>
+  <li>Database is not configured (DATABASE_URL / POSTGRES_URL / DATABASE_PRIVATE_URL).</li>
+  <li>Scanner, reports, and recipient management are disabled.</li>
+</ul>
+<p>Set database env vars and redeploy to enable full functionality.</p>
+</body></html>`);
+    }
+
     const recipients = await prisma.telegramRecipient.findMany({ orderBy: { createdAt: 'desc' } });
     const openTrades = await prisma.trade.count({ where: { status: 'OPEN' } });
     const closedTrades = await prisma.trade.findMany({ where: { status: 'CLOSED' } });
@@ -38,6 +57,7 @@ export function startWebPanel(port = 3000) {
   });
 
   app.post('/recipients', async (req, res) => {
+    if (!hasDatabase) return res.status(503).send('Database is not configured');
     const { name, chatId, isChannel } = req.body as { name?: string; chatId?: string; isChannel?: string };
     if (!name || !chatId) return res.status(400).send('name and chatId are required');
     await prisma.telegramRecipient.upsert({
@@ -49,6 +69,7 @@ export function startWebPanel(port = 3000) {
   });
 
   app.post('/recipients/:id/toggle', async (req, res) => {
+    if (!hasDatabase) return res.status(503).send('Database is not configured');
     const existing = await prisma.telegramRecipient.findUnique({ where: { id: req.params.id } });
     if (existing) {
       await prisma.telegramRecipient.update({ where: { id: req.params.id }, data: { isActive: !existing.isActive } });
@@ -57,9 +78,10 @@ export function startWebPanel(port = 3000) {
   });
 
   app.post('/recipients/:id/delete', async (req, res) => {
+    if (!hasDatabase) return res.status(503).send('Database is not configured');
     await prisma.telegramRecipient.delete({ where: { id: req.params.id } });
     res.redirect('/');
   });
 
-  app.listen(port, () => logger.info({ port }, 'Web panel started'));
+  app.listen(port, () => logger.info({ port, hasDatabase }, 'Web panel started'));
 }
