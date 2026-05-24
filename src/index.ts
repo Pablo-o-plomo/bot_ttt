@@ -6,32 +6,40 @@ import { registerCommands, notify, bot } from './telegram/bot';
 import { startWebPanel } from './web/panel';
 
 const errors = getEnvValidationErrors();
-const fatal = errors.filter((e) => e.startsWith('DATABASE_URL') || e.startsWith('Live trading is blocked'));
+const fatal = errors.filter((e) => e.startsWith('Live trading is blocked'));
 if (fatal.length) {
   logger.error({ errors: fatal }, 'Configuration error. Service cannot start.');
   process.exit(1);
 }
 
-const warnings = errors.filter((e) => !fatal.includes(e));
-for (const warning of warnings) logger.warn(warning);
-
-const state = { paused: false };
-registerCommands(state);
-startWebPanel(env.panelPort);
-
-async function tick() {
-  try {
-    await runScanner(state);
-  } catch (e) {
-    logger.error(e);
-  }
+for (const warning of errors.filter((e) => !fatal.includes(e))) {
+  logger.warn(warning);
 }
 
-setInterval(tick, env.scanIntervalMs);
-setInterval(async () => {
-  const r = await buildDailyReport(env.initialBalance);
-  await notify(`📊 Daily: balance ${r.balance.toFixed(2)}, pnl ${r.pnlDay.toFixed(2)}, trades ${r.tradeCount}, winrate ${(r.winRate * 100).toFixed(1)}%, rec: ${r.recommendation}`);
-}, 24 * 60 * 60 * 1000);
+const hasDatabase = Boolean(env.databaseUrl);
+const state = { paused: false };
 
-tick();
-logger.info({ telegramEnabled: !!bot }, 'Bot started');
+if (hasDatabase) {
+  registerCommands(state);
+  startWebPanel(env.panelPort);
+
+  async function tick() {
+    try {
+      await runScanner(state);
+    } catch (e) {
+      logger.error(e);
+    }
+  }
+
+  setInterval(tick, env.scanIntervalMs);
+  setInterval(async () => {
+    const r = await buildDailyReport(env.initialBalance);
+    await notify(`📊 Daily: balance ${r.balance.toFixed(2)}, pnl ${r.pnlDay.toFixed(2)}, trades ${r.tradeCount}, winrate ${(r.winRate * 100).toFixed(1)}%, rec: ${r.recommendation}`);
+  }, 24 * 60 * 60 * 1000);
+
+  tick();
+} else {
+  logger.warn('DATABASE_URL is not set. Running in limited mode: scanner, reports, web panel, and DB-backed Telegram commands are disabled.');
+}
+
+logger.info({ telegramEnabled: !!bot, hasDatabase }, 'Bot started');
