@@ -39,8 +39,6 @@ if (hasDatabase) {
   }, 24 * 60 * 60 * 1000);
 
   tick();
-} else {
-  logger.warn('DATABASE_URL is not set. Running in limited mode: scanner, reports, web panel, and DB-backed Telegram commands are disabled.');
 }
 
 logger.info({ telegramEnabled: !!bot, hasDatabase }, 'Bot started');

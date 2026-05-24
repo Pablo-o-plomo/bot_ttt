@@ -20,14 +20,18 @@ export const env = {
 
 export function getEnvValidationErrors(): string[] {
   const errors: string[] = [];
+
   if (!env.databaseUrl) {
-    errors.push('DATABASE_URL is required (or POSTGRES_URL / DATABASE_PRIVATE_URL).');
+    errors.push('DATABASE_URL is not set. Running in limited mode (no scanner/reports/web panel recipient management). Set DATABASE_URL or POSTGRES_URL/DATABASE_PRIVATE_URL to enable full mode.');
   }
+
   if (!env.telegramBotToken) {
-    errors.push('TELEGRAM_BOT_TOKEN is not set: Telegram notifications and commands will be disabled.');
+    errors.push('TELEGRAM_BOT_TOKEN is not set. Telegram notifications and bot commands are disabled.');
   }
+
   if (!env.paperTrading && !env.allowLiveTrading) {
     errors.push('Live trading is blocked. Set ALLOW_LIVE_TRADING=true explicitly when PAPER_TRADING=false.');
   }
+
   return errors;
 }
