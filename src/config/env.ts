@@ -10,7 +10,7 @@ export const env = {
   databaseUrl: getDatabaseUrl(),
   telegramBotToken: process.env.TELEGRAM_BOT_TOKEN,
   telegramChatId: process.env.TELEGRAM_CHAT_ID,
-  panelPort: Number(process.env.PANEL_PORT ?? 3000),
+  panelPort: Number(process.env.PORT ?? process.env.PANEL_PORT ?? 3000),
   paperTrading: process.env.PAPER_TRADING !== 'false',
   allowLiveTrading: process.env.ALLOW_LIVE_TRADING === 'true',
   initialBalance: Number(process.env.INITIAL_BALANCE ?? 1000),

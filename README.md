@@ -32,7 +32,7 @@ Paper-trading crypto bot on Node.js + TypeScript + PostgreSQL + Prisma + Telegra
 - Build command: `npm run build`
 - Start command: `npm run start`
 - Ensure PostgreSQL plugin is attached and `DATABASE_URL` is present.
-- Expose web service port from `PANEL_PORT`.
+- Railway provides `PORT`; app uses `PORT` first, then `PANEL_PORT`.
 
 ## Safety
 - `PAPER_TRADING=true` by default.

@@ -83,5 +83,5 @@ export function startWebPanel(port = 3000) {
     res.redirect('/');
   });
 
-  app.listen(port, () => logger.info({ port, hasDatabase }, 'Web panel started'));
+  app.listen(port, '0.0.0.0', () => logger.info({ port, hasDatabase }, 'Web panel started'));
 }
