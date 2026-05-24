@@ -1,0 +1,86 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum TradeStatus {
+  OPEN
+  CLOSED
+}
+
+model Trade {
+  id           String      @id @default(cuid())
+  symbol       String
+  side         String
+  entryPrice   Float
+  exitPrice    Float?
+  stopLoss     Float
+  takeProfit   Float
+  positionSize Float
+  openedAt     DateTime    @default(now())
+  closedAt     DateTime?
+  pnl          Float?
+  pnlPercent   Float?
+  status       TradeStatus @default(OPEN)
+  reasonOpen   String
+  reasonClose  String?
+  mistakeTags  String[]
+  lesson       String?
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+}
+
+model Signal {
+  id         String   @id @default(cuid())
+  symbol     String
+  timeframe  String
+  signalType String
+  confidence Float?
+  reasons    String[]
+  blocked    Boolean  @default(false)
+  blockedBy  String?
+  createdAt  DateTime @default(now())
+}
+
+model MarketSnapshot {
+  id          String   @id @default(cuid())
+  symbol      String
+  timeframe   String
+  price       Float
+  ema50       Float
+  ema200      Float
+  rsi14       Float
+  atr14       Float
+  volume      Float
+  volumeSma20 Float
+  createdAt   DateTime @default(now())
+}
+
+model DailyReport {
+  id             String   @id @default(cuid())
+  date           DateTime @unique
+  balance        Float
+  pnlDay         Float
+  tradeCount     Int
+  winRate        Float
+  avgProfit      Float
+  avgLoss        Float
+  topMistakes    String[]
+  bestSymbols    String[]
+  recommendation String
+  createdAt      DateTime @default(now())
+}
+
+model TelegramRecipient {
+  id          String   @id @default(cuid())
+  name        String
+  chatId      String   @unique
+  isChannel   Boolean  @default(false)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
