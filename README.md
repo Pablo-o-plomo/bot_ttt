@@ -19,6 +19,7 @@ Paper-trading crypto bot on Node.js + TypeScript + PostgreSQL + Prisma + Telegra
 
 ## Setup
 1. Copy `.env.example` -> `.env` and fill values.
+   - `DATABASE_URL` is required (the app also accepts `POSTGRES_URL` or `DATABASE_PRIVATE_URL` aliases).
 2. Install deps: `npm install`
 3. Generate prisma client: `npm run prisma:generate`
 4. Run migrations: `npm run prisma:migrate`

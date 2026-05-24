@@ -2,13 +2,24 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-const required = ['DATABASE_URL', 'TELEGRAM_BOT_TOKEN'];
-for (const key of required) {
-  if (!process.env[key]) throw new Error(`Missing env: ${key}`);
+function getDatabaseUrl(): string | undefined {
+  return process.env.DATABASE_URL || process.env.POSTGRES_URL || process.env.DATABASE_PRIVATE_URL;
+}
+
+const resolvedDatabaseUrl = getDatabaseUrl();
+const required: Array<[string, string | undefined, string]> = [
+  ['DATABASE_URL', resolvedDatabaseUrl, 'Set DATABASE_URL (or POSTGRES_URL/DATABASE_PRIVATE_URL) to your PostgreSQL connection string.'],
+  ['TELEGRAM_BOT_TOKEN', process.env.TELEGRAM_BOT_TOKEN, 'Set TELEGRAM_BOT_TOKEN from @BotFather.']
+];
+
+const missing = required.filter(([, value]) => !value);
+if (missing.length) {
+  const details = missing.map(([key, , hint]) => `- ${key}: ${hint}`).join('\n');
+  throw new Error(`Missing required environment variables:\n${details}\n\nCopy .env.example to .env and fill all required values.`);
 }
 
 export const env = {
-  databaseUrl: process.env.DATABASE_URL!,
+  databaseUrl: resolvedDatabaseUrl!,
   telegramBotToken: process.env.TELEGRAM_BOT_TOKEN!,
   telegramChatId: process.env.TELEGRAM_CHAT_ID,
   panelPort: Number(process.env.PANEL_PORT ?? 3000),
