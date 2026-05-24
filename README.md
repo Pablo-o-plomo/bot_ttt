@@ -39,3 +39,24 @@ Paper-trading crypto bot on Node.js + TypeScript + PostgreSQL + Prisma + Telegra
 - Live trading blocked unless both:
   - `PAPER_TRADING=false`
   - `ALLOW_LIVE_TRADING=true`
+
+
+## Timeweb deploy (Docker)
+1. Create `.env` from `.env.example` and set at minimum:
+   - `DATABASE_URL` (or `POSTGRES_URL` / `DATABASE_PRIVATE_URL`)
+   - `TELEGRAM_BOT_TOKEN` (optional, but required for Telegram commands/alerts)
+2. Build and run:
+   - `docker compose up -d --build`
+3. Check health:
+   - `curl http://localhost:3000/healthz`
+
+Notes:
+- App listens on `PORT` first, then `PANEL_PORT`, then `3000`.
+- If DB URL is missing, app starts in limited mode.
+
+
+### Timeweb build troubleshooting
+- Current Dockerfile does **not** use `apt-get` and must build on `node:22-alpine`.
+- If Timeweb is still using an old Dockerfile, trigger a clean rebuild (clear cache / redeploy latest commit).
+- In build logs, verify base image line contains `node:22-alpine`.
+- Container start command is `npm start` (`node dist/index.js`); PM2 is not required.
